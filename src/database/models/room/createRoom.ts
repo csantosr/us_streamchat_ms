@@ -1,8 +1,9 @@
 import Room, { IRoom } from "."
 
-export const createRoom = async (id: string): Promise<IRoom> => {
+export const createRoom = async (id: string, isStream: boolean): Promise<IRoom> => {
   const room = new Room({
-    streamId: id,
+    roomId: id,
+    isStream,
   })
 
   await room.save();

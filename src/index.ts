@@ -1,4 +1,5 @@
 import express from 'express';
+import bodyParser from 'body-parser';
 import http from 'http';
 import {Server} from 'socket.io';
 import db from "./database/connect";
@@ -16,37 +17,94 @@ const io = new Server(httpServer, {
     origin: '*',
   }
 });
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 httpServer.listen(PORT, () => {
   console.log(`listening on *:${PORT}`);
 });
 
-io.on('connection', async (socket) => {
-  socket.on('allRooms', async () => {
-    const rooms = await getAllRooms();
-    socket.emit('allRooms', rooms);
-  })
-  socket.on('join', async ({streamId, userId}) => {
-    const room = await connectToRoom(streamId, userId);
-    socket.emit('roomInfo', room);
-    await messageToRoom(streamId, 'ADMIN', `${userId} just joined, say hi!`)
-    socket.broadcast.to(streamId).emit('message', {
-      content: `${userId} just joined, say hi!`,
-      author: 'ADMIN',
-      date: new Date().toString(),
-    });
-    socket.join(streamId);
-  });
-
-  socket.on('message', async ({streamId, userId, message}) => {
-    await messageToRoom(streamId, userId, message);
-    socket.broadcast.to(streamId).emit('message', {
-      content: message,
-      author: userId,
-      date: new Date().toString(),
-    });
-  })
+app.get('/api/rooms', async (req, res) => {
+  const rooms = await getAllRooms();
+  res.status(200).send(rooms)
 });
+
+app.post('/api/rooms/', async (req, res) => {
+
+  if (!('roomId' in req.body)) {
+    res.status(400).send({
+      message: 'Not all parameters are present or valid'
+    });
+    return;
+  }
+  const {roomId, isStream} = req.body;
+  try {
+    const room = await createRoom(roomId, !!isStream)
+    if (!room) {
+      res.status(500).send();
+      return;
+    }
+    res.status(201).send();
+  } catch (error) {
+    res.status(500).send(error);
+  }
+})
+
+app.get('/api/rooms/:roomId', async (req, res) => {
+  const {roomId} = req.params;
+  const room = await getRoomById(roomId);
+  if (!room) {
+    res.status(404).send();
+    return;
+  }
+  res.status(200).send(room)
+});
+
+app.post('/api/rooms/:roomId/join', async (req, res) => {
+
+  if (!('roomId' in req.params) || req.params.roomId === '' || !('userId' in req.body)) {
+    res.status(400).send({
+      message: 'Not all parameters are present or valid'
+    });
+    return;
+  }
+  const {userId} = req.body;
+  const {roomId} = req.params;
+  try {
+    const room = await connectToRoom(roomId, userId);
+    if (!room) {
+      res.status(404).send();
+      return;
+    }
+    await messageToRoom(roomId, 'ADMIN', `${userId} just joined, say hi!`); 
+    res.status(201).send();
+  } catch (error) {
+    res.status(500).send(error);
+  }
+})
+
+app.post('/api/rooms/:roomId/message', async (req, res) => {
+  if (!('roomId' in req.params) || req.params.roomId === '' || !('userId' in req.body) || !('message' in req.body)) {
+    res.status(400).send({
+      message: 'Not all parameters are present or valid'
+    });
+    return;
+  }
+
+  const {userId, message} = req.body;
+  const {roomId} = req.params;
+
+  try {
+    const room = await messageToRoom(roomId, userId, message);
+    if (!room) {
+      res.status(404).send();
+      return;
+    } 
+    res.status(201).send();
+  } catch (error) {
+    res.status(500).send(error);
+  }
+})
 
 db.on("error", console.error.bind(console, "connection error: "));
 db.once("open", function () {

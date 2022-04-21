@@ -13,6 +13,7 @@
   "author": "Cristian Santos <csantosr@unal.edu.co>",
   "license": "ISC",
   "devDependencies": {
+    "@types/body-parser": "^1.19.2",
     "@types/express": "^4.17.13",
     "@types/mongodb": "^4.0.7",
     "@types/mongoose": "^5.11.97",
@@ -24,6 +25,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
+    "body-parser": "^1.20.0",
     "express": "^4.17.3",
     "mongodb": "^4.5.0",
     "mongoose": "^6.3.0",

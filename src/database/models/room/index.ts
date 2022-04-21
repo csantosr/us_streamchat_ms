@@ -2,17 +2,18 @@ import { Document } from "mongodb";
 import mongoose from "mongoose";
 
 export interface IRoom extends Document {
-  streamId: string,
+  roomId: string,
   messages: {
     date?: string,
     content: string,
     author: string,
   }[],
   connections: string[],
+  isStream: boolean,
 }
 
 const roomSchema = new mongoose.Schema<IRoom>({
-  streamId: {
+  roomId: {
     type: String
   },
   messages: [{
@@ -26,6 +27,9 @@ const roomSchema = new mongoose.Schema<IRoom>({
   connections: [{
     type: String,
   }],
+  isStream: {
+    type: Boolean,
+  }
 });
 
 const Room = mongoose.model<IRoom>('Room', roomSchema);

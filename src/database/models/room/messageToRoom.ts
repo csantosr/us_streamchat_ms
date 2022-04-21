@@ -1,8 +1,12 @@
 import Room, { IRoom } from "."
 import { getRoomById } from "./getRoom";
 
-export const messageToRoom = async (streamId: string, userId: string, message: string): Promise<IRoom> => {
-  const room = await getRoomById(streamId);
+export const messageToRoom = async (roomId: string, userId: string, message: string): Promise<IRoom | undefined> => {
+  const room = await getRoomById(roomId);
+
+  if (!room) {
+    return room;
+  }
 
   room.messages.push({
     content: message,
