@@ -84,7 +84,8 @@ app.post('/api/rooms/:roomId/join', async (req, res) => {
 })
 
 app.post('/api/rooms/:roomId/message', async (req, res) => {
-  if (!('roomId' in req.params) || req.params.roomId === '' || !('userId' in req.body) || !('message' in req.body)) {
+  console.log(req.params, req.body)
+  if (!('roomId' in req.params) || req.params.roomId === '' || !('userId' in req.body) || !('content' in req.body)) {
     res.status(400).send({
       message: 'Not all parameters are present or valid'
     });
