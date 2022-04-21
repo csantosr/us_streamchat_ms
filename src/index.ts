@@ -92,11 +92,11 @@ app.post('/api/rooms/:roomId/message', async (req, res) => {
     return;
   }
 
-  const {userId, message} = req.body;
+  const {userId, content} = req.body;
   const {roomId} = req.params;
 
   try {
-    const room = await messageToRoom(roomId, userId, message);
+    const room = await messageToRoom(roomId, userId, content);
     if (!room) {
       res.status(404).send();
       return;
